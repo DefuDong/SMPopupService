@@ -1,0 +1,31 @@
+PODS:
+  - FBSnapshotTestCase (2.1.4):
+    - FBSnapshotTestCase/SwiftSupport (= 2.1.4)
+  - FBSnapshotTestCase/Core (2.1.4)
+  - FBSnapshotTestCase/SwiftSupport (2.1.4):
+    - FBSnapshotTestCase/Core
+  - SMPopupService (0.1.0)
+  - SnapKit (4.2.0)
+
+DEPENDENCIES:
+  - FBSnapshotTestCase (~> 2.1.4)
+  - SMPopupService (from `../`)
+  - SnapKit (~> 4.2.0)
+
+SPEC REPOS:
+  trunk:
+    - FBSnapshotTestCase
+    - SnapKit
+
+EXTERNAL SOURCES:
+  SMPopupService:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  FBSnapshotTestCase: 094f9f314decbabe373b87cc339bea235a63e07a
+  SMPopupService: 11d16957bc791f36bed90252211c0a3b2d1bdf59
+  SnapKit: fe8a619752f3f27075cc9a90244d75c6c3f27e2a
+
+PODFILE CHECKSUM: eae4a88dca00cb77cf9b1e9d449c0959164e2b0d
+
+COCOAPODS: 1.14.3

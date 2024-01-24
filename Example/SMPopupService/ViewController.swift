@@ -1,24 +1,299 @@
 //
 //  ViewController.swift
-//  SMPopupService
+//  PopupTest
 //
-//  Created by dongdefu on 01/24/2024.
-//  Copyright (c) 2024 dongdefu. All rights reserved.
+//  Created by 董德富 on 2023/8/30.
 //
 
 import UIKit
+import SMPopupService
 
 class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        // Do any additional setup after loading the view.
+        
+        typealias ButtonItem = (title: String, sel: Selector)
+        let buttonItems: [ButtonItem] = [("Center", #selector(button1Action)),
+                                         ("Top", #selector(button2Action)),
+                                         ("Sheet", #selector(button3Action)),
+                                         ("单队列", #selector(button4Action)),
+                                         ("双队列", #selector(button5Action)),
+                                         ("单队列叠加", #selector(button6Action)),
+                                         ("VC", #selector(button7Action)),
+                                         ("showImmediately", #selector(button8Action)),
+                                         ("updateLayout", #selector(button9Action)),
+                                         ("next", #selector(button10Action)),
+                                         ("Single", #selector(button11Action))]
+        
+        for (idx, item) in buttonItems.enumerated() {
+            let button = UIButton(type: .custom)
+            button.frame = CGRectMake(100, 0, 100, 50)
+            button.setTitle(item.title, for: .normal)
+            button.backgroundColor = .red
+            button.addTarget(self, action: item.sel, for: .touchUpInside)
+            view.addSubview(button)
+            
+            button.snp.makeConstraints { make in
+                make.centerX.equalToSuperview()
+                make.width.equalTo(150)
+                make.height.equalTo(50)
+                make.top.equalToSuperview().offset(100 + idx * 70)
+            }
+        }
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    
+    @objc func button1Action() {
+        showCenter()
+    }
+    
+    @objc func button2Action() {
+        showTopbar()
+    }
+    
+    @objc func button3Action() {
+        showBottom()
+    }
+    
+    @objc func button4Action() {
+        showTopbar()
+        showCenter()
+        showBottom()
+    }
+    
+    @objc func button5Action() {
+
+//        showTestBottom(1, "1")
+//        showTestCenter(2, "2")
+//        showTestBottom(3, "3")
+//        showTestCenter(4, "4")
+//        showTestBottom(5, "5")
+//        showTestCenter(6, "6")
+//        showTestBottom(7, "7")
+        
+//        showTestBottom(0, "1")
+//        showTestCenter(0, "2")
+//        showTestBottom(0, "3")
+//        showTestCenter(0, "4")
+//        showTestBottom(0, "5")
+//        showTestCenter(0, "6")
+//        showTestBottom(0, "7")
+        
+        for i in 1...5 {
+            show(scene: .push, priority: i, tag: "\(i)", queue: .default)
+            show(scene: .center, priority: i, tag: "\(i)", queue: .coexistence)
+        }
+    }
+    
+    @objc func button6Action() {
+        SMPopupService.pause()
+        for i in 1...5 {
+            show(scene: .push, priority: i, tag: "\(i)", queue: .default)
+        }
+        SMPopupService.continue()
+    }
+    
+    @objc func button7Action() {
+        showTestVC()
+    }
+    
+    @objc func button8Action() {
+        for i in 1...5 {
+            show(scene: .push, priority: i, tag: "\(i)", queue: .default)
+        }
+        self.perform(#selector(showImmediately), with: nil, afterDelay: 3)
+        self.perform(#selector(showImmediately), with: nil, afterDelay: 4)
+        self.perform(#selector(showImmediately), with: nil, afterDelay: 5)
+    }
+    
+    @objc func button9Action() {
+
+        let config = SMPopupConfig(sceneStyle: .center)
+        config.cornerRadius = 0
+        config.showAnimationStyle = .bottomRise
+        config.dismissAnimationStyle = .bottomFall
+        config.identifier = "center"
+        let pop = CenterPopView()
+        pop.callbackBlock = { _ in
+            SMPopupService.dismiss()
+        }
+        SMPopupService.show(config: config, view: pop)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            pop.updateLayout()
+            UIView.animate(withDuration: 0.25) {
+                pop.superview?.layoutIfNeeded()
+            }
+//            SMPopupService.updateLayout(animate: true)
+        }
+    }
+    
+    @objc func button10Action() {
+        navigationController?.pushViewController(NextViewController(), animated: true)
     }
 
+    @objc func button11Action() {
+        showBottom()
+        
+        let config = SMPopupConfig(sceneStyle: .center)
+        config.cornerRadius = 0
+        config.showAnimationStyle = .bottomRise
+        config.dismissAnimationStyle = .bottomFall
+        config.isClickCoverDismiss = true
+        config.identifier = "center"
+        let pop = CenterPopView()
+        
+        let popupProtocol =
+        SMPopupService.showSingle(config: config, view: pop) { popupView, config, event in
+            print("\(event.eventScene) \(event.object)")
+        }
+        
+        pop.callbackBlock = { [weak popupProtocol] _ in
+            popupProtocol?.dismissSingle(true, completion: nil)
+            popupProtocol?.sendEventSingle(SMPopupEvent.customEvent(scene: "Custom", object: "obj"))
+        }
+    }
+}
+
+extension ViewController {
+    func showTestBottom(_ priority: Int = 0, _ tag: String? = nil, _ queue: SMPopupQueueType = .default) {
+        let config = SMPopupConfig(sceneStyle: .sheet)
+        config.cornerRadius = 18
+        config.identifier = tag
+        config.priority = priority
+        config.rectCorners = [.topLeft, .topRight]
+        config.queue = queue
+        let pop = ButtomPopView()
+        pop.label.text = tag ?? "\(priority)"
+        
+        SMPopupService.show(config: config, view: pop)
+    }
+    func showTestCenter(_ priority: Int = 0, _ tag: String? = nil, _ queue: SMPopupQueueType = .default) {
+        let config = SMPopupConfig(sceneStyle: .center)
+        config.cornerRadius = 0
+        config.showAnimationStyle = .topFall
+        config.identifier = tag
+        config.priority = priority
+        config.queue = queue
+        let pop = CenterPopView()
+        pop.label.text = tag ?? "\(priority)"
+        pop.callbackBlock = { _ in
+            SMPopupService.dismiss()
+        }
+        SMPopupService.show(config: config, view: pop) { popupView, config, event in
+            print("\(event.eventType), \(event.eventScene ?? ""), \(String(describing: event.object))")
+        }
+    }
+    
+    func showTestTop(_ priority: Int = 0, _ tag: String? = nil, _ queue: SMPopupQueueType = .default) {
+        let config = SMPopupConfig(sceneStyle: .push)
+        config.queue = .coexistence
+        config.cornerRadius = 0
+        config.identifier = tag
+        config.priority = priority
+        config.queue = queue
+        let pop = TopBarPopView()
+        pop.label.text = tag ?? "\(priority)"
+        
+        SMPopupService.show(config: config, view: pop)
+    }
+    
+    func show(scene: SMPopupScene, priority: Int = 0, tag: String? = nil, queue: SMPopupQueueType = .default) {
+        let config = SMPopupConfig(sceneStyle: scene)
+        config.queue = queue
+        config.identifier = tag
+        config.priority = priority
+        config.queue = queue
+        
+        let pop: (UIView & SMProtocol)
+        switch scene {
+        case .center:
+            let p = CenterPopView()
+            p.callbackBlock = { _ in
+                SMPopupService.dismiss(queue: queue)
+            }
+            pop = p
+        case .sheet:
+            pop = ButtomPopView()
+        case .push:
+            config.cornerRadius = 0
+            pop = TopBarPopView()
+        }
+        
+        pop.label.text = tag ?? "\(priority)"
+        SMPopupService.show(config: config, view: pop)
+    }
+}
+
+extension ViewController {
+    func showCenter(_ priority: Int = 0) {
+        let config = SMPopupConfig(sceneStyle: .center)
+        config.cornerRadius = 0
+        config.showAnimationStyle = .bottomRise
+        config.dismissAnimationStyle = .bottomFall
+        config.identifier = "center"
+        config.priority = priority
+        let pop = CenterPopView()
+        pop.callbackBlock = { _ in
+            SMPopupService.dismiss {
+                print("complete")
+            }
+        }
+        SMPopupService.show(config: config, view: pop) { popupView, config, event in
+            guard popupView == pop else { return }
+            print("\(event.eventType), \(event.eventScene ?? ""), \(String(describing: event.object))")
+        }
+    }
+
+    func showBottom(_ priority: Int = 0) {
+        let config = SMPopupConfig(sceneStyle: .sheet)
+        config.cornerRadius = 20
+        config.identifier = "bottom"
+        config.priority = priority
+        let pop = ButtomPopView()
+        SMPopupService.show(config: config, view: pop)
+    }
+    
+    func showTopbar(_ priority: Int = 0) {
+        let config = SMPopupConfig(sceneStyle: .push)
+        config.cornerRadius = 0
+        config.dismissDuration = 3
+        config.identifier = "top"
+        config.priority = priority
+        let pop = TopBarPopView()
+        SMPopupService.show(config: config, view: pop)
+    }
+    
+    func showTopbar2(_ priority: Int = 0) {
+        let config = SMPopupConfig(sceneStyle: .push)
+        config.dismissDuration = 3
+        config.priority = priority
+        config.identifier = "top2"
+        let pop = TopBarPopView()
+        SMPopupService.show(config: config, view: pop)
+    }
+    
+    func showTestVC() {
+        let config = SMPopupConfig(sceneStyle: .center)
+        config.cornerRadius = 0
+        config.showAnimationStyle = .bubble
+        config.identifier = "center"
+        
+        let popVC = CenterVC()
+        SMPopupService.show(config: config, dataSource: popVC)
+    }
+    
+    @objc func showImmediately() {
+        let config = SMPopupConfig(sceneStyle: .center)
+        config.cornerRadius = 0
+        config.showAnimationStyle = .bubble
+        config.identifier = "center"
+        config.priority = 1
+        config.level = .maxAndImmediately
+        let pop = CenterPopView()
+        SMPopupService.show(config: config, view: pop)
+    }
 }
 

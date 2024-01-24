@@ -1,0 +1,6 @@
+framework module SMPopupService {
+  umbrella header "SMPopupService-umbrella.h"
+
+  export *
+  module * { export * }
+}

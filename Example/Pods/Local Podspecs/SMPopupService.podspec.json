@@ -1,0 +1,24 @@
+{
+  "name": "SMPopupService",
+  "version": "0.1.0",
+  "summary": "A short description of SMPopupService.",
+  "description": "TODO: Add long description of the pod here.",
+  "homepage": "https://github.com/dongdefu/SMPopupService",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "dongdefu": "defu.dong@gmail.com"
+  },
+  "source": {
+    "git": "https://github.com/dongdefu/SMPopupService.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "12.0"
+  },
+  "source_files": "SMPopupService/Classes/**/*",
+  "swift_versions": "5.0",
+  "swift_version": "5.0"
+}

@@ -28,9 +28,11 @@ TODO: Add long description of the pod here.
   s.source           = { :git => 'https://github.com/dongdefu/SMPopupService.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
-  s.ios.deployment_target = '10.0'
+  s.ios.deployment_target = '12.0'
 
   s.source_files = 'SMPopupService/Classes/**/*'
+    
+  s.swift_version = '5.0'
   
   # s.resource_bundles = {
   #   'SMPopupService' => ['SMPopupService/Assets/*.png']

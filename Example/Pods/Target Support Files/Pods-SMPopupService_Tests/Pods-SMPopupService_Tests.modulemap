@@ -1,0 +1,6 @@
+framework module Pods_SMPopupService_Tests {
+  umbrella header "Pods-SMPopupService_Tests-umbrella.h"
+
+  export *
+  module * { export * }
+}
