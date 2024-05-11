@@ -8,11 +8,6 @@
 import Foundation
 
 class SMSafePool {
-    
-    init(queue: DispatchQueue?) {
-        self.queue = queue ?? DispatchQueue(label: "Popup.Queue", attributes: .concurrent)
-    }
-    
     private let pool: SMCompareQueue = SMCompareQueue { obj1, obj2 in
         guard let p1 = (obj1 as? SMPopupInterpreter)?.priority,
               let p2 = (obj2 as? SMPopupInterpreter)?.priority else { return true }
@@ -24,8 +19,9 @@ class SMSafePool {
 //        return p1 >= p2
 //    }
 
+    private static let sharedQueue: DispatchQueue = DispatchQueue(label: "Popup.Queue", attributes: .concurrent)
     /// 展示队列
-    private let queue: DispatchQueue
+    private let queue: DispatchQueue = SMSafePool.sharedQueue
 
     func isEmpty() -> Bool {
         pool.isEmpty()

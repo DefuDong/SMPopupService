@@ -19,7 +19,7 @@ public class SMPopupService: NSObject {
     private let core: SMPoolCore
     
     /// 需要更多队列请自行创建新的实例
-    override init() {
+    public override init() {
         core = SMPoolCore()
         super.init()
     }

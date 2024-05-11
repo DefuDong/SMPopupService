@@ -9,23 +9,14 @@ import Foundation
 import UIKit
 
 class SMPoolCore {
-    
-    init(queue: DispatchQueue? = nil) {
-        self.queue = queue ?? DispatchQueue(label: "Popup.Queue", attributes: .concurrent)
-        self.safePool = SMSafePool(queue: queue)
-    }
-
     /// paush时isShown可能为true, 所以需要综合判断
     var isShowing: Bool {
         isShown && (currentInterperter != nil)
     }
     /// 是否有弹窗正在展示
     private var isShown: Bool = false
-
-    /// 展示队列
-    private let queue: DispatchQueue
     
-    private let safePool: SMSafePool
+    private let safePool: SMSafePool = SMSafePool()
         
     ///  当前弹窗
     private var currentInterperter: SMPopupInterpreter?
