@@ -142,7 +142,7 @@ class CenterPopView: UIView, SMProtocol {
     }
     
     @objc func confirmButtonAction() {
-        SMPopupService.sendEvent(SMPopupEvent.customEvent(scene: "custom", object: "dismiss_callback"))
+        SMPopupService.standard.sendEvent(SMPopupEvent.customEvent(scene: "custom", object: "dismiss_callback"))
         callbackBlock?(true)
     }
 
@@ -257,39 +257,39 @@ class CenterPopView: UIView, SMProtocol {
         }
     }
     
-    func executeCustomShowAnimation(complete: @escaping (Bool) -> Void) {
-        let animate = CAKeyframeAnimation.init(keyPath: "transform")
-        animate.duration = 0.25
-        animate.values = [NSValue.init(caTransform3D: CATransform3DMakeScale(1.5, 1.5, 1.0)),
-                          NSValue.init(caTransform3D: CATransform3DIdentity)]
-//        animate.timingFunctions = [CAMediaTimingFunction.init(name: CAMediaTimingFunctionName.easeInEaseOut),
-//                                   CAMediaTimingFunction.init(name: CAMediaTimingFunctionName.easeInEaseOut)]
-        layer.add(animate, forKey: nil)
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-            complete(true)
-        }
-    }
-    
-    func executeCustomDismissAnimation(complete: @escaping (Bool) -> Void) {
-        UIView.animate(withDuration: 0.25) {
-            self.layer.position = CGPoint(x: 0, y: 0)
-        } completion: { finish in
-            complete(finish)
-        }
-        
+//    func executeCustomShowAnimation(complete: @escaping (Bool) -> Void) {
 //        let animate = CAKeyframeAnimation.init(keyPath: "transform")
 //        animate.duration = 0.25
-//        animate.values = [NSValue.init(caTransform3D: CATransform3DIdentity),
-//                          NSValue.init(caTransform3D: CATransform3DMakeScale(0.2, 0.2, 1.0)),]
-//        animate.timingFunctions = [CAMediaTimingFunction.init(name: CAMediaTimingFunctionName.easeInEaseOut),
-//                                   CAMediaTimingFunction.init(name: CAMediaTimingFunctionName.easeInEaseOut)]
+//        animate.values = [NSValue.init(caTransform3D: CATransform3DMakeScale(1.5, 1.5, 1.0)),
+//                          NSValue.init(caTransform3D: CATransform3DIdentity)]
+////        animate.timingFunctions = [CAMediaTimingFunction.init(name: CAMediaTimingFunctionName.easeInEaseOut),
+////                                   CAMediaTimingFunction.init(name: CAMediaTimingFunctionName.easeInEaseOut)]
 //        layer.add(animate, forKey: nil)
 //
 //        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
 //            complete(true)
 //        }
-    }
+//    }
+//    
+//    func executeCustomDismissAnimation(complete: @escaping (Bool) -> Void) {
+//        UIView.animate(withDuration: 0.25) {
+//            self.layer.position = CGPoint(x: 0, y: 0)
+//        } completion: { finish in
+//            complete(finish)
+//        }
+//        
+////        let animate = CAKeyframeAnimation.init(keyPath: "transform")
+////        animate.duration = 0.25
+////        animate.values = [NSValue.init(caTransform3D: CATransform3DIdentity),
+////                          NSValue.init(caTransform3D: CATransform3DMakeScale(0.2, 0.2, 1.0)),]
+////        animate.timingFunctions = [CAMediaTimingFunction.init(name: CAMediaTimingFunctionName.easeInEaseOut),
+////                                   CAMediaTimingFunction.init(name: CAMediaTimingFunctionName.easeInEaseOut)]
+////        layer.add(animate, forKey: nil)
+////
+////        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+////            complete(true)
+////        }
+//    }
     
     deinit {
         print("\(type(of: self)) -> \(#function)")

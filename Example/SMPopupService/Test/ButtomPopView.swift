@@ -32,7 +32,7 @@ class ButtomPopView: UIView, SMProtocol {
     func layout(superView: UIView) {
         self.snp.makeConstraints { make in
             make.left.right.bottom.equalToSuperview()
-            make.height.equalTo(220)
+            make.height.equalTo(300)
         }
     }
     
@@ -56,7 +56,7 @@ class ButtomPopView: UIView, SMProtocol {
         print("\(type(of: self)) -> \(#function)")
     }
     
-    let imageView = UIImageView(image: UIImage(named: "bottomShare"))
+    let imageView = UIImageView(image: UIImage(named: "bottom"))
     
     let label = UILabel()
 }

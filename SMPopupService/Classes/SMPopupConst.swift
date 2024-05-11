@@ -13,13 +13,6 @@ public typealias SMPopupIdentifier = String
 
 public typealias SMPopupEventBlock = (_ popupView: UIView, _ config: SMPopupConfig, _ event: SMPopupEvent) -> Void
 
-///  加入的展示队列, 默认default, coexistence为共存队列
-@objc
-public enum SMPopupQueueType: Int {
-    case `default`      //默认队列
-    case coexistence    //共存队列
-}
-
 /// 展示动画 (SMPopupScene.center才会生效)
 @objc
 public enum SMPopupShowAnimationStyle: Int {
@@ -27,6 +20,7 @@ public enum SMPopupShowAnimationStyle: Int {
     case topFall        //顶部降落
     case bottomRise     //底部升起
     case bubble         //比例动画
+    case none           //无
 }
 
 ///  消失动画, center 才会生效

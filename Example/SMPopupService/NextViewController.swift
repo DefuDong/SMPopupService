@@ -35,11 +35,11 @@ class NextViewController: UIViewController {
         config.identifier = "center"
         let pop = CenterPopView()
         pop.callbackBlock = { _ in
-            SMPopupService.dismiss {
+            SMPopupService.standard.dismiss {
                 print("complete")
             }
         }
-        SMPopupService.show(config: config, view: pop)
+        SMPopupService.standard.show(config: config, view: pop)
     }
     
     deinit {

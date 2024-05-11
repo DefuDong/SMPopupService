@@ -263,6 +263,8 @@ extension SMPopupInterpreter {
         case .bubble:
             fadeAnimate(show: true, completion: completion)
             bubbleAnimate(popupView.layer)
+        case .none:
+            completion(true)
         }
     }
     

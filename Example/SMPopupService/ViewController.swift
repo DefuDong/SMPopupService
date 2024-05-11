@@ -8,6 +8,11 @@
 import UIKit
 import SMPopupService
 
+public enum SMPopupQueueType: Int {
+    case `default`      //默认队列
+    case coexistence    //共存队列
+}
+
 class ViewController: UIViewController {
 
     override func viewDidLoad() {
@@ -88,11 +93,11 @@ class ViewController: UIViewController {
     }
     
     @objc func button6Action() {
-        SMPopupService.pause()
+        SMPopupService.standard.pause()
         for i in 1...5 {
             show(scene: .push, priority: i, tag: "\(i)", queue: .default)
         }
-        SMPopupService.continue()
+        SMPopupService.standard.continue()
     }
     
     @objc func button7Action() {
@@ -117,16 +122,16 @@ class ViewController: UIViewController {
         config.identifier = "center"
         let pop = CenterPopView()
         pop.callbackBlock = { _ in
-            SMPopupService.dismiss()
+            SMPopupService.standard.dismiss()
         }
-        SMPopupService.show(config: config, view: pop)
+        SMPopupService.standard.show(config: config, view: pop)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             pop.updateLayout()
             UIView.animate(withDuration: 0.25) {
                 pop.superview?.layoutIfNeeded()
             }
-//            SMPopupService.updateLayout(animate: true)
+//            SMPopupService.standard.updateLayout(animate: true)
         }
     }
     
@@ -146,7 +151,7 @@ class ViewController: UIViewController {
         let pop = CenterPopView()
         
         let popupProtocol =
-        SMPopupService.showSingle(config: config, view: pop) { popupView, config, event in
+        SMPopupService.standard.showSingle(config: config, view: pop) { popupView, config, event in
             print("\(event.eventScene) \(event.object)")
         }
         
@@ -164,11 +169,11 @@ extension ViewController {
         config.identifier = tag
         config.priority = priority
         config.rectCorners = [.topLeft, .topRight]
-        config.queue = queue
         let pop = ButtomPopView()
         pop.label.text = tag ?? "\(priority)"
         
-        SMPopupService.show(config: config, view: pop)
+        let service = queue == .default ? SMPopupService.standard : SMPopupService.coexistence
+        service.show(config: config, view: pop)
     }
     func showTestCenter(_ priority: Int = 0, _ tag: String? = nil, _ queue: SMPopupQueueType = .default) {
         let config = SMPopupConfig(sceneStyle: .center)
@@ -176,43 +181,43 @@ extension ViewController {
         config.showAnimationStyle = .topFall
         config.identifier = tag
         config.priority = priority
-        config.queue = queue
         let pop = CenterPopView()
         pop.label.text = tag ?? "\(priority)"
         pop.callbackBlock = { _ in
-            SMPopupService.dismiss()
+            SMPopupService.standard.dismiss()
         }
-        SMPopupService.show(config: config, view: pop) { popupView, config, event in
+        
+        let service = queue == .default ? SMPopupService.standard : SMPopupService.coexistence
+        service.show(config: config, view: pop) { popupView, config, event in
             print("\(event.eventType), \(event.eventScene ?? ""), \(String(describing: event.object))")
         }
     }
     
     func showTestTop(_ priority: Int = 0, _ tag: String? = nil, _ queue: SMPopupQueueType = .default) {
         let config = SMPopupConfig(sceneStyle: .push)
-        config.queue = .coexistence
         config.cornerRadius = 0
         config.identifier = tag
         config.priority = priority
-        config.queue = queue
         let pop = TopBarPopView()
         pop.label.text = tag ?? "\(priority)"
         
-        SMPopupService.show(config: config, view: pop)
+        let service = queue == .default ? SMPopupService.standard : SMPopupService.coexistence
+        service.show(config: config, view: pop)
     }
     
     func show(scene: SMPopupScene, priority: Int = 0, tag: String? = nil, queue: SMPopupQueueType = .default) {
         let config = SMPopupConfig(sceneStyle: scene)
-        config.queue = queue
         config.identifier = tag
         config.priority = priority
-        config.queue = queue
-        
+
+        let service = queue == .default ? SMPopupService.standard : SMPopupService.coexistence
+
         let pop: (UIView & SMProtocol)
         switch scene {
         case .center:
             let p = CenterPopView()
             p.callbackBlock = { _ in
-                SMPopupService.dismiss(queue: queue)
+                service.dismiss()
             }
             pop = p
         case .sheet:
@@ -223,7 +228,7 @@ extension ViewController {
         }
         
         pop.label.text = tag ?? "\(priority)"
-        SMPopupService.show(config: config, view: pop)
+        service.show(config: config, view: pop)
     }
 }
 
@@ -237,11 +242,11 @@ extension ViewController {
         config.priority = priority
         let pop = CenterPopView()
         pop.callbackBlock = { _ in
-            SMPopupService.dismiss {
+            SMPopupService.standard.dismiss {
                 print("complete")
             }
         }
-        SMPopupService.show(config: config, view: pop) { popupView, config, event in
+        SMPopupService.standard.show(config: config, view: pop) { popupView, config, event in
             guard popupView == pop else { return }
             print("\(event.eventType), \(event.eventScene ?? ""), \(String(describing: event.object))")
         }
@@ -253,7 +258,7 @@ extension ViewController {
         config.identifier = "bottom"
         config.priority = priority
         let pop = ButtomPopView()
-        SMPopupService.show(config: config, view: pop)
+        SMPopupService.standard.show(config: config, view: pop)
     }
     
     func showTopbar(_ priority: Int = 0) {
@@ -263,7 +268,7 @@ extension ViewController {
         config.identifier = "top"
         config.priority = priority
         let pop = TopBarPopView()
-        SMPopupService.show(config: config, view: pop)
+        SMPopupService.standard.show(config: config, view: pop)
     }
     
     func showTopbar2(_ priority: Int = 0) {
@@ -272,7 +277,7 @@ extension ViewController {
         config.priority = priority
         config.identifier = "top2"
         let pop = TopBarPopView()
-        SMPopupService.show(config: config, view: pop)
+        SMPopupService.standard.show(config: config, view: pop)
     }
     
     func showTestVC() {
@@ -282,7 +287,7 @@ extension ViewController {
         config.identifier = "center"
         
         let popVC = CenterVC()
-        SMPopupService.show(config: config, dataSource: popVC)
+        SMPopupService.standard.show(config: config, dataSource: popVC)
     }
     
     @objc func showImmediately() {
@@ -293,7 +298,7 @@ extension ViewController {
         config.priority = 1
         config.level = .maxAndImmediately
         let pop = CenterPopView()
-        SMPopupService.show(config: config, view: pop)
+        SMPopupService.standard.show(config: config, view: pop)
     }
 }
 

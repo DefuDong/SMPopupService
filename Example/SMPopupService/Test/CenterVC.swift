@@ -13,7 +13,7 @@ class CenterVC: UIViewController, SMPopupViewDataSource, SMPopupViewDelegate {
     override func viewDidLoad() {
         let center = CenterPopView()
         center.callbackBlock = { _ in
-            SMPopupService.dismiss()
+            SMPopupService.standard.dismiss()
         }
         view.addSubview(center)
         

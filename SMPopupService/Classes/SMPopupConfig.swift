@@ -54,9 +54,6 @@ public class SMPopupConfig: NSObject {
     /// 如果已存在maxAndImmediately弹窗, 会加入到队列中,设置最高优先级,并且按照加入顺序展示
     public var level: SMPopupLevel = .default
     
-    ///  展示队列, 默认default (coexistence共存队列，仅建议SMPopupScene.push可加入此队列)
-    public var queue: SMPopupQueueType = .default
-
     /// 弹窗场景风格
     public var sceneStyle: SMPopupScene { scene }
         

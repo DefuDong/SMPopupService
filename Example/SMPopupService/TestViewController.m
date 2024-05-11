@@ -30,10 +30,10 @@
     config.backgroundColor = UIColor.blackColor;
     
     TopBarPopView *pop = [[TopBarPopView alloc] init];
-    [SMPopupService showWithConfig:config view:pop];
+    [[SMPopupService standard] showWithConfig:config view:pop];
     
-    [SMPopupService pause];
-    [SMPopupService continue];
+    [[SMPopupService standard] pause];
+    [[SMPopupService standard] continue];
     
 //    SMPopupService dismis
     

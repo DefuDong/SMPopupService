@@ -10,7 +10,7 @@ import UIKit
 
 class SMPoolCore {
     
-    init(queue: DispatchQueue?) {
+    init(queue: DispatchQueue? = nil) {
         self.queue = queue ?? DispatchQueue(label: "Popup.Queue", attributes: .concurrent)
         self.safePool = SMSafePool(queue: queue)
     }
