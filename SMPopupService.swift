@@ -160,7 +160,9 @@ public class SMPopupService: NSObject {
         return core.currentItem()
     }
     
-    
+    public func currentPopupView(identifier: SMPopupIdentifier?) -> UIView? {
+        return core.currentPopupView(identifier: identifier)
+    }
     
     private func runMain(_ work: @escaping @convention(block) () -> Void) {
         if Thread.isMainThread {

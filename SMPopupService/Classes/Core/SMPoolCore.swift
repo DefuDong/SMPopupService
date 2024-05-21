@@ -139,6 +139,19 @@ class SMPoolCore {
         return config
     }
     
+    func currentPopupView(identifier: SMPopupIdentifier?) -> UIView? {
+        guard let view = currentInterperter?.popupView, isShown else { return nil }
+        if let identifier = identifier {
+            if identifier == currentInterperter?.config.identifier {
+                return view
+            } else {
+                return nil
+            }
+        } else {
+            return view
+        }
+    }
+
     func forceClear() {
         safePool.clearAll()
         
