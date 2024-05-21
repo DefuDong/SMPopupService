@@ -138,10 +138,13 @@ class SMPopupInterpreter: NSObject {
                     self.backView.layoutIfNeeded()
                 } completion: { _ in
                     self.originalFrame = popupView.frame
+                    self.configCorners()
                 }
             } else {
                 UIView.animate(withDuration: duration) {
                     self.originalFrame = popupView.frame
+                } completion: { _ in
+                    self.configCorners()
                 }
             }
         } else {
@@ -150,6 +153,7 @@ class SMPopupInterpreter: NSObject {
                 backView.layoutIfNeeded()
             }
             originalFrame = popupView.frame
+            configCorners()
         }
     }
     
