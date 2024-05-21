@@ -164,6 +164,14 @@ public class SMPopupService: NSObject {
         return core.currentPopupView(identifier: identifier)
     }
     
+    /// 更新特定弹窗布局
+    /// - Parameters:
+    ///   - identifier: 弹窗 id, 如果为空则更新当前弹窗
+    ///   - animate: 动画
+    public func updateLayout(identifier: SMPopupIdentifier? = nil, animate: Bool = true) {
+        core.updateLayout(identifier: identifier, animate: animate)
+    }
+    
     private func runMain(_ work: @escaping @convention(block) () -> Void) {
         if Thread.isMainThread {
             work()
