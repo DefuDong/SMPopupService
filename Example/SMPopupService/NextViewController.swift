@@ -19,9 +19,9 @@ class NextViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-            self.navigationController?.popViewController(animated: true)
-        }
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+//            self.navigationController?.popViewController(animated: true)
+//        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -30,8 +30,8 @@ class NextViewController: UIViewController {
         let config = SMPopupConfig(sceneStyle: .center)
         config.cornerRadius = 0
         config.containerView = view
-        config.showAnimationStyle = .bottomRise
-        config.dismissAnimationStyle = .bottomFall
+//        config.showAnimationStyle = .bottomRise
+//        config.dismissAnimationStyle = .bottomFall
         config.identifier = "center"
         let pop = CenterPopView()
         pop.callbackBlock = { _ in

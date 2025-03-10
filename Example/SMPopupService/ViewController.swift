@@ -53,22 +53,31 @@ class ViewController: UIViewController {
 
     
     @objc func button1Action() {
-//        showCenter()
-        
-        let config = SMPopupConfig(sceneStyle: .center)
-        config.dismissDuration = 4
-        let pop = CenterPopView()
+        let config = SMPopupConfig(sceneStyle: .push)
+        config.cornerRadius = 0
+        config.dismissDuration = 3
+        config.identifier = "top"
+        config.containerView = self.view
+        let pop = TopBarPopView()
         SMPopupService.standard.show(config: config, view: pop)
         
-        let config2 = SMPopupConfig(sceneStyle: .sheet)
-        config2.dismissDuration = 2
-        let pop2 = ButtomPopView()
-        SMPopupService.coexistence.show(config: config2, view: pop2)
-        
-        let config3 = SMPopupConfig(sceneStyle: .push)
-        config3.dismissDuration = 3
-        let pop3 = TopBarPopView()
-        customService.show(config: config3, view: pop3)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            self?.navigationController?.pushViewController(NextViewController(), animated: true)
+        }
+//        let config = SMPopupConfig(sceneStyle: .center)
+//        config.dismissDuration = 4
+//        let pop = CenterPopView()
+//        SMPopupService.standard.show(config: config, view: pop)
+//        
+//        let config2 = SMPopupConfig(sceneStyle: .sheet)
+//        config2.dismissDuration = 2
+//        let pop2 = ButtomPopView()
+//        SMPopupService.coexistence.show(config: config2, view: pop2)
+//        
+//        let config3 = SMPopupConfig(sceneStyle: .push)
+//        config3.dismissDuration = 3
+//        let pop3 = TopBarPopView()
+//        customService.show(config: config3, view: pop3)
     }
     
     @objc func button2Action() {

@@ -248,20 +248,9 @@ extension SMPoolCore {
         guard let currentInterperter = currentInterperter else { return }
         
         //如果当前Interperter 的 popupView 不存在, Interperter 置为 nil
-        guard let currentPopup = currentInterperter.popupView else {
+        if currentInterperter.popupView == nil {
             self.currentInterperter = nil
             isShown = false
-            return
         }
-        //如果当前popupView没在Window上, 视为无主视图删除
-        var nextSuper = currentPopup.superview
-        while nextSuper != nil {
-            if let nextSuper = nextSuper, nextSuper is UIWindow {
-                return
-            }
-            nextSuper = nextSuper?.superview
-        }
-        self.currentInterperter = nil
-        isShown = false
     }
 }
