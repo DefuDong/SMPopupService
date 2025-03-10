@@ -50,8 +50,7 @@ public class SMPopupConfig: NSObject {
     
     ///  弹窗级别, 默认default (用于优先级分层)
     ///  maxAndImmediately 是否立即展示 (谨慎使用).
-    /// 如果true, 会忽视掉level和priority配置, 不加入队列排序. dismiss当前展示的弹窗并且立即展示 (如果当前为pause状态,会先加入队列)
-    /// 如果已存在maxAndImmediately弹窗, 会加入到队列中,设置最高优先级,并且按照加入顺序展示
+    ///  如果true, 会忽视掉level和priority配置, 不加入队列排序. dismiss当前展示的弹窗并且立即展示 (如果当前为pause状态,会先加入队列)
     public var level: SMPopupLevel = .default
     
     /// 弹窗场景风格
@@ -86,6 +85,9 @@ public class SMPopupConfig: NSObject {
     
     /// 遮罩背景颜色
     public var backgroundColor: UIColor = .black.withAlphaComponent(0.5)
+        
+    /// 检查是否可以展示,  默认直接展示
+    public var checkShowResult: (() -> SMPopupCheckResult) = { return .show }
     
     private override init() {
         super.init()

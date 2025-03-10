@@ -168,7 +168,7 @@ class ViewController: UIViewController {
         let pop = CenterPopView()
         
         let popupProtocol =
-        SMPopupService.standard.showSingle(config: config, view: pop) { popupView, config, event in
+        SMPopupService.showSingle(config: config, view: pop) { popupView, config, event in
             print("\(event.eventScene) \(event.object)")
         }
         

@@ -49,3 +49,40 @@ extension UIScreen {
         return top
     }
 }
+
+private var popupProtolKey: UInt8 = 0
+extension UIView {
+    /// 获取当前单独管理弹窗的protocol操作对象
+    /// 只有使用showSingle单独 弹出/管理 的弹窗才可以使用, 队列管理弹窗不要使用!!!
+    @objc public var popupViewProtocol: SMPopupViewProtocol? {
+        get {
+            //获取warpper, 并从中获取到值
+            if let warpper = objc_getAssociatedObject(self, &popupProtolKey) as? WeakObjWrapper {
+                return warpper.weakObj as? SMPopupViewProtocol
+            }
+            return nil
+        }
+        set {
+            var warpper = objc_getAssociatedObject(self, &popupProtolKey) as? WeakObjWrapper
+            if let warpper = warpper {
+                //已存在直接赋值
+                warpper.weakObj = newValue
+            } else {
+                //warpper不存在则创建
+                warpper = WeakObjWrapper(weakObj: newValue)
+            }
+            //保存warpper对象
+            objc_setAssociatedObject(self, &popupProtolKey, warpper, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+    
+    /// 中间对象, 防止强引用
+    private class WeakObjWrapper: Any {
+        weak var weakObj: AnyObject?
+        init(weakObj: AnyObject?) {
+            self.weakObj = weakObj
+        }
+    }
+}
+
+

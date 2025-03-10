@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 
+
 @objcMembers
 public class SMPopupService: NSObject {
     
@@ -65,7 +66,7 @@ public class SMPopupService: NSObject {
     ///   - delegate: delegate 为历史弹窗迁移提供, 比如VC
     ///   - event: 事件回调, 可以发送自定义事件并且附带参数. 注意如果是自定义事件, 需要检查跟当前弹窗是否匹配
     /// - Returns: SMPopupViewProtocol 协议类型, dismiss和sendEvent需要使用protol操作
-    public func showSingle(config: SMPopupConfig,
+    public class func showSingle(config: SMPopupConfig,
                                  view: UIView? = nil,
                                  dataSource: SMPopupViewDataSource? = nil,
                                  delegate: SMPopupViewDelegate? = nil,
@@ -80,7 +81,7 @@ public class SMPopupService: NSObject {
         interpreter.dismissCalledBlock = { [weak interpreter] in
             interpreter?.dismiss()
         }
-        let _ = interpreter.show()
+        let _ = interpreter.show(true)
         return interpreter
     }
     
@@ -110,7 +111,7 @@ public class SMPopupService: NSObject {
     }
 
     /// 暂停所有弹窗展示
-    /// 暂停后一定要恢复, 否则后续弹窗都无法展示
+    /// 暂停后一定要恢复, 否则后续弹窗都无法展示⚠️
     public func pause() {
         core.pauseShow()
     }
@@ -121,14 +122,14 @@ public class SMPopupService: NSObject {
     }
     
     /// 挂起当前弹窗 (隐藏掉)
-    public func suspend() {
-        core.suspend()
-    }
+//    public func suspend() {
+//        core.suspend()
+//    }
     
     /// 恢复当前弹窗
-    public func recover() {
-        core.recover()
-    }
+//    public func recover() {
+//        core.recover()
+//    }
     
     /// 删除特定level弹窗数据
     /// - Parameter level: Level
@@ -154,6 +155,10 @@ public class SMPopupService: NSObject {
         core.isShowing(identifier: identifier)
     }
     
+    public func isEmpty() -> Bool {
+        core.isEmpty()
+    }
+    
     /// 返回当前展示弹窗数据, 优先返回主队列
     /// - Returns: 弹窗数据
     public func currentItem() -> SMPopupConfig? {
@@ -170,6 +175,10 @@ public class SMPopupService: NSObject {
     ///   - animate: 动画
     public func updateLayout(identifier: SMPopupIdentifier? = nil, animate: Bool = true) {
         core.updateLayout(identifier: identifier, animate: animate)
+    }
+    
+    public func addListener(_ listener: AnyObject, callback: @escaping SMPopupSubcribeCallback) {
+        core.addListener(listener, callback: callback)
     }
     
     private func runMain(_ work: @escaping @convention(block) () -> Void) {

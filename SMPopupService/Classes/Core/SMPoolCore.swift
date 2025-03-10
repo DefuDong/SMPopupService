@@ -17,7 +17,9 @@ class SMPoolCore {
     private var isShown: Bool = false
     
     private let safePool: SMSafePool = SMSafePool()
-        
+    
+    private let subcribe: SMPopupSubcribe = SMPopupSubcribe()
+
     ///  当前弹窗
     private var currentInterperter: SMPopupInterpreter?
     
@@ -31,16 +33,15 @@ class SMPoolCore {
             self?.dismissPopupView()
         }
         
+        inter.abnormalDismissBlock = { [weak self] in
+            self?.dismissPopupView(force: true)
+        }
+        
         //如果加入配置为showImmediately
         if inter.config.level == .maxAndImmediately {
-            if let cur = currentInterperter { //真实有在展示
-                if cur.config.level == .maxAndImmediately { //当前也是immediately, 直接放入队列
-                    safePool.push(inter)
-                    return
-                } else { //dismiss当前, 放回队列
-                    dismissPopupView(force: true, canContinue: false)
-                    safePool.push(cur)
-                }
+            if let _ = currentInterperter { //有正在展示
+                //dismiss当前
+                dismissPopupView(force: true, canContinue: false)
             } else if isShown { //当前是pause状态, 直接放入队列
                 safePool.push(inter)
                 return
@@ -102,7 +103,7 @@ class SMPoolCore {
     
     func continueShow() {
         isShown = false
-        if !safePool.isEmpty() {
+        if currentInterperter == nil && !safePool.isEmpty() {
             showPopupView()
         }
     }
@@ -115,6 +116,8 @@ class SMPoolCore {
             DispatchQueue.main.async {
                 self.dismissPopupView()
             }
+        } else if isEmpty() {
+            subcribe.notifyListeners(.empty)
         }
     }
     
@@ -126,12 +129,18 @@ class SMPoolCore {
             DispatchQueue.main.async {
                 self.dismissPopupView()
             }
+        } else if isEmpty() {
+            subcribe.notifyListeners(.empty)
         }
     }
     
     func isShowing(identifier: SMPopupIdentifier) -> Bool {
         guard let curId = currentInterperter?.config.identifier, isShown else { return false }
         return curId == identifier
+    }
+    
+    func isEmpty() -> Bool {
+        return safePool.isEmpty()
     }
     
     func currentItem() -> SMPopupConfig? {
@@ -158,6 +167,8 @@ class SMPoolCore {
         //清除当前展示
         if isShown {
             dismissPopupView(force: true, canContinue: false)
+        } else {
+            subcribe.notifyListeners(.empty)
         }
     }
     
@@ -176,17 +187,31 @@ class SMPoolCore {
             currentInterperter?.updateLayout(animate: animate)
         }
     }
+    
+    func addListener(_ listener: AnyObject, callback: @escaping SMPopupSubcribeCallback) {
+        subcribe.addListener(listener, callback: callback)
+    }
 }
 
 /// show  & dismiss
 extension SMPoolCore {
     private func showPopupView() {
         guard let top = safePool.top() as? SMPopupInterpreter else { return }
-        currentInterperter = top
-
-        safePool.pop()
         
-        isShown = top.show()
+        let checkResult = top.config.checkShowResult()
+        switch checkResult {
+        case .show: //正常展示
+            currentInterperter = top
+            safePool.pop()
+            isShown = top.show()
+        case .discardedContinue: //丢弃当前, 继续展示下一个
+            safePool.pop()
+            showPopupView()
+        case .discardedPause: //丢弃当前, 暂停
+            safePool.pop()
+        default: //pause什么都不做
+            break
+        }
     }
     
     /// dismiss
@@ -208,10 +233,14 @@ extension SMPoolCore {
             
             complete?()
             
-            //如果pool不为空, 展示下一个
-            if canContinue && !self.safePool.isEmpty() {
-                self.showPopupView()
-            }
+            if !self.safePool.isEmpty() {
+                //如果pool不为空, 展示下一个
+                if canContinue {
+                    self.showPopupView()
+                }
+            } else {
+                subcribe.notifyListeners(.empty)
+            }            
         }
     }
     

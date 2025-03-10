@@ -45,4 +45,6 @@ public protocol SMPopupViewProtocol: NSObjectProtocol {
     @objc func dismissSingle(_ animate: Bool, completion: (() -> Void)?)
     
     @objc func sendEventSingle(_ event: SMPopupEvent)
+    
+    @objc func updateLayoutSingle(animate: Bool)
 }

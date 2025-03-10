@@ -18,6 +18,9 @@ class SMPopupInterpreter: NSObject {
     
     /// 消失回调(定时器/手势/背景点击)
     var dismissCalledBlock: (() -> Void)?
+    
+    /// 弹窗异常消失回调, 不在当前视图层及展示,比如控制器右滑, 没有调用正常消失代码
+    var abnormalDismissBlock: (() -> Void)?
 
     private var dataSource: SMPopupViewDataSource?
     private var delegate: SMPopupViewDelegate?
@@ -29,8 +32,11 @@ class SMPopupInterpreter: NSObject {
         self.delegate = delegate
     }
     
-    func show() -> Bool {
+    func show(_ isSingle: Bool = false) -> Bool {
         popupView = getPopupView()
+        if isSingle {
+            popupView?.popupViewProtocol = self
+        }
         
         guard let popupView = popupView else { return false }
         guard let container = config.containerView ?? UIApplication.shared.getKeyWindow() else { return false }
@@ -72,7 +78,7 @@ class SMPopupInterpreter: NSObject {
     }
     
     func dismiss(_ force: Bool = false, completion: (() -> Void)? = nil) {
-        guard let popupView = popupView else { return }
+        guard let popupView = popupView, let _ = popupView.superview else { return }
 
         //lify cycle
         realDelegate()?.popupWillDisappear?()
@@ -174,7 +180,13 @@ class SMPopupInterpreter: NSObject {
         return config.priority + weight
     }
     
-    private lazy var backView: SMPopupMaskView = SMPopupMaskView()
+    private lazy var backView: SMPopupMaskView = SMPopupMaskView { [weak self] in
+        if let _ = self?.popupView?.popupViewProtocol { //如果是单独弹出的弹窗, 直接dismiss
+            self?.dismiss(true)
+        } else {
+            self?.abnormalDismissBlock?()
+        }
+    }
     //存储弹窗原始frame
     private var originalFrame: CGRect = .zero
     
@@ -532,5 +544,9 @@ extension SMPopupInterpreter: SMPopupViewProtocol {
     
     func sendEventSingle(_ event: SMPopupEvent) {
         sendEvent(event)
+    }
+    
+    func updateLayoutSingle(animate: Bool) {
+        updateLayout(animate: animate)
     }
 }
