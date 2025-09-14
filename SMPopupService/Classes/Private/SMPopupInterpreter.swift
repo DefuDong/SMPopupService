@@ -57,10 +57,13 @@ class SMPopupInterpreter: NSObject {
 
     /// 数据源协议对象
     /// - Note: 用于动态创建弹窗视图和自定义布局
+    /// - 如果提供了dataSource，将使用其customPopupView()方法创建弹窗视图
+    /// - 如果未提供dataSource，将使用传入的view参数
     private var dataSource: SMPopupViewDataSource?
     
     /// 代理协议对象
     /// - Note: 用于接收弹窗生命周期回调
+    /// - 提供弹窗显示、隐藏、点击等事件的通知
     private var delegate: SMPopupViewDelegate?
 
     /// 初始化弹窗解释器

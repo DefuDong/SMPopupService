@@ -46,6 +46,9 @@ public class SMPopupService: NSObject {
     
     /// 弹窗核心管理器
     /// - Note: 负责弹窗队列的管理、优先级排序和生命周期控制
+    /// - 使用SMSafePool管理弹窗队列，支持线程安全操作
+    /// - 自动按优先级排序，确保重要弹窗优先显示
+    /// - 同一时间只显示一个弹窗，支持自动切换
     private let core: SMPoolCore
     
     /// 初始化弹窗服务

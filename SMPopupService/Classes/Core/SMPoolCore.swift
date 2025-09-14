@@ -47,14 +47,20 @@ class SMPoolCore {
     
     /// 安全弹窗池
     /// - Note: 使用优先级队列管理弹窗，支持线程安全操作
+    /// - 基于二叉堆实现，支持O(log n)的插入和删除操作
+    /// - 自动按优先级排序，优先级高的弹窗优先显示
     private let safePool: SMSafePool = SMSafePool()
     
     /// 弹窗订阅管理器
     /// - Note: 处理弹窗事件订阅和状态变化通知
+    /// - 支持多个监听器同时监听弹窗状态变化
+    /// - 提供弹窗显示、隐藏、清空等事件的通知机制
     private let subcribe: SMPopupSubcribe = SMPopupSubcribe()
 
     /// 当前显示的弹窗解释器
     /// - Note: 记录当前正在显示的弹窗，用于状态管理和控制
+    /// - 同一时间只能有一个弹窗处于显示状态
+    /// - 当弹窗消失时，会自动从队列中取出下一个弹窗显示
     private var currentInterperter: SMPopupInterpreter?
     
     
@@ -139,7 +145,7 @@ class SMPoolCore {
     
     func continueShow() {
         isShown = false
-        if currentInterperter == nil && !safePool.isEmpty() {
+        if currentInterperter == nil && !safePool.isEmpty {
             showPopupView()
         }
     }
@@ -176,7 +182,7 @@ class SMPoolCore {
     }
     
     func isEmpty() -> Bool {
-        return safePool.isEmpty()
+        return safePool.isEmpty
     }
     
     func currentItem() -> SMPopupConfig? {
@@ -232,7 +238,7 @@ class SMPoolCore {
 /// show  & dismiss
 extension SMPoolCore {
     private func showPopupView() {
-        guard let top = safePool.top() as? SMPopupInterpreter else { return }
+        guard let top = safePool.top() else { return }
         
         let checkResult = top.config.checkShowResult()
         switch checkResult {
@@ -269,7 +275,7 @@ extension SMPoolCore {
             
             complete?()
             
-            if !self.safePool.isEmpty() {
+            if !self.safePool.isEmpty {
                 //如果pool不为空, 展示下一个
                 if canContinue {
                     self.showPopupView()

@@ -37,6 +37,16 @@ typedef void * element_t; // 元素类型，存储Objective-C对象的指针
 /**
  * 优先级队列的核心数据结构
  * 使用数组实现完全二叉树（二叉堆）
+ * 
+ * 设计说明：
+ * - 使用动态数组存储元素，支持自动扩容
+ * - 通过索引关系实现完全二叉树的逻辑结构
+ * - 支持任意数量的元素，内存使用效率高
+ * 
+ * 内存管理：
+ * - base: 指向堆数组的指针，使用malloc/realloc分配
+ * - capcity: 当前分配的内存容量，用于判断是否需要扩容
+ * - size: 当前存储的元素数量，用于判断堆是否为空
  */
 typedef struct {
 //    bool (*comp)(element_t par, element_t chi); // 比较函数（已废弃，使用block）

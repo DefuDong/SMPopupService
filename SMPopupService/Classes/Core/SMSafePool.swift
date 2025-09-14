@@ -27,10 +27,12 @@ import Foundation
  * - 无法获取优先级的弹窗默认优先级最高
  */
 class SMSafePool {
-    private let pool: SMPriorityQueue = SMPriorityQueue { obj1, obj2 in
-        guard let p1 = (obj1 as? SMPopupInterpreter)?.priority,
-              let p2 = (obj2 as? SMPopupInterpreter)?.priority else { return true }
-        return p1 >= p2  // 大优先级在前，符合大根堆特性
+    private let pool: SMCompareQueue = SMCompareQueue { obj1, obj2 in
+        guard let inter1 = obj1 as? SMPopupInterpreter,
+              let inter2 = obj2 as? SMPopupInterpreter else {
+            return false
+        }
+        return inter1.priority >= inter2.priority  // 大优先级在前
     }
 
     /// 共享的并发队列，用于管理弹窗操作的线程安全
@@ -45,8 +47,8 @@ class SMSafePool {
      * - Returns: 如果池中没有弹窗任务返回true，否则返回false
      * - Note: 此方法是线程安全的，使用同步调用确保数据一致性
      */
-    func isEmpty() -> Bool {
-        pool.isEmpty()
+    var isEmpty: Bool {
+        queue.sync { pool.isEmpty() }
     }
     
     /**
@@ -59,8 +61,7 @@ class SMSafePool {
      */
     func push(_ inter: SMPopupInterpreter) {
         queue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
-            self.pool.push(inter)
+            self?.pool.push(inter)
         }
     }
     
@@ -74,8 +75,7 @@ class SMSafePool {
      */
     func pop() {
         queue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
-            self.pool.pop()
+            self?.pool.pop()
         }
     }
     
@@ -87,15 +87,8 @@ class SMSafePool {
      * - Note: 此操作不会移除任务，只是查看堆顶元素
      * - Complexity: O(1)，直接访问堆顶元素
      */
-    func top() -> Any? {
-        var result: Any?
-        
-        queue.sync { [weak self] in
-            guard let self = self else { return }
-            result = self.pool.top()
-        }
-            
-        return result
+    func top() -> SMPopupInterpreter? {
+        queue.sync { pool.top() as? SMPopupInterpreter }
     }
     
     /**
@@ -108,25 +101,7 @@ class SMSafePool {
      * - Complexity: O(n)，其中n是当前池中的任务数量
      */
     func clear(level: SMPopupLevel) {
-        queue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
-            
-            // 查找池子里是否有相同level, 有则过滤掉
-            if !self.pool.isEmpty() {
-                let all = self.pool.allObjects()
-                var resultArr: [Any] = []
-                
-                all.forEach { item in
-                    if let config = (item as? SMPopupInterpreter)?.config,
-                        config.level != level {
-                        resultArr.append(item)
-                    }
-                }
-                
-                self.pool.clear()
-                self.pool.push(with: resultArr)
-            }
-        }
+        clearFiltered { $0.config.level != level }
     }
     
     /**
@@ -139,23 +114,25 @@ class SMSafePool {
      * - Complexity: O(n)，其中n是当前池中的任务数量
      */
     func clear(identifier: SMPopupIdentifier) {
+        clearFiltered { $0.config.identifier != identifier }
+    }
+    
+    /**
+     * 根据条件过滤并重建弹窗池
+     * 
+     * - Parameter predicate: 过滤条件，返回true表示保留该弹窗
+     * - Note: 此方法是线程安全的，使用barrier标志确保写操作独占执行
+     * - Complexity: O(n)，其中n是当前池中的任务数量
+     */
+    private func clearFiltered(where predicate: @escaping (SMPopupInterpreter) -> Bool) {
         queue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
+            guard let self = self, !self.pool.isEmpty() else { return }
             
-            // 查找池子里是否有相同id, 有则过滤掉
-            if !self.pool.isEmpty() {
-                let all = self.pool.allObjects()
-                var resultArr: [Any] = []
-                
-                all.forEach { item in
-                    if let config = (item as? SMPopupInterpreter)?.config,
-                        config.identifier != identifier {
-                        resultArr.append(item)
-                    }
-                }
-                
-                self.pool.clear()
-                self.pool.push(with: resultArr)
+            let allObjects = self.pool.allObjects().compactMap { $0 as? SMPopupInterpreter }
+            let filtered = allObjects.filter(predicate)
+            self.pool.clear()
+            if !filtered.isEmpty {
+                self.pool.push(elements: filtered)
             }
         }
     }
@@ -170,12 +147,73 @@ class SMSafePool {
      */
     func clearAll() {
         queue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
-            
-            // 清除队列
-            if !self.pool.isEmpty() {
-                self.pool.clear()
-            }
+            self?.pool.clear()
         }
+    }
+    
+    // MARK: - 便利方法
+    
+    /**
+     * 获取弹窗池中的任务数量
+     * 
+     * - Returns: 当前池中的弹窗任务数量
+     * - Note: 此方法是线程安全的，使用同步调用确保数据一致性
+     */
+    var count: Int {
+        queue.sync { pool.length() }
+    }
+    
+    /**
+     * 批量添加弹窗任务
+     * 
+     * - Parameter interpreters: 要添加的弹窗解释器数组
+     * - Note: 此方法是线程安全的，使用barrier标志确保写操作独占执行
+     * - Complexity: O(n log n)，其中n是添加的任务数量
+     */
+    func push(_ interpreters: [SMPopupInterpreter]) {
+        guard !interpreters.isEmpty else { return }
+        
+        queue.async(flags: .barrier) { [weak self] in
+            self?.pool.push(elements: interpreters)
+        }
+    }
+    
+    /**
+     * 检查是否存在指定级别的弹窗
+     * 
+     * - Parameter level: 要检查的弹窗级别
+     * - Returns: 如果存在指定级别的弹窗返回true，否则返回false
+     * - Note: 此方法是线程安全的，使用同步调用确保数据一致性
+     */
+    func contains(level: SMPopupLevel) -> Bool {
+        queue.sync {
+            let allObjects = pool.allObjects().compactMap { $0 as? SMPopupInterpreter }
+            return allObjects.contains { $0.config.level == level }
+        }
+    }
+    
+    /**
+     * 检查是否存在指定标识符的弹窗
+     * 
+     * - Parameter identifier: 要检查的弹窗标识符
+     * - Returns: 如果存在指定标识符的弹窗返回true，否则返回false
+     * - Note: 此方法是线程安全的，使用同步调用确保数据一致性
+     */
+    func contains(identifier: SMPopupIdentifier) -> Bool {
+        queue.sync {
+            let allObjects = pool.allObjects().compactMap { $0 as? SMPopupInterpreter }
+            return allObjects.contains { $0.config.identifier == identifier }
+        }
+    }
+    
+    /**
+     * 获取所有弹窗任务（用于调试）
+     * 
+     * - Returns: 当前池中所有弹窗任务的数组
+     * - Note: 此方法是线程安全的，使用同步调用确保数据一致性
+     * - Warning: 此方法仅用于调试，不应在生产环境中频繁调用
+     */
+    func allObjects() -> [SMPopupInterpreter] {
+        queue.sync { pool.allObjects().compactMap { $0 as? SMPopupInterpreter } }
     }
 }

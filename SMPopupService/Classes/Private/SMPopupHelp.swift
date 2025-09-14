@@ -12,23 +12,47 @@ import UIKit
  * 弹窗容器类
  * 
  * 功能说明：
- * - 管理单独弹窗的生命周期
- * - 持有SMPopupInterpreter和SMPopupConfig
- * - 通过弹窗view的dealloc自动释放
- * - 提供弹窗控制接口
+ * - 管理单独弹窗的生命周期，不通过队列管理
+ * - 持有SMPopupInterpreter和SMPopupConfig，提供完整的弹窗控制
+ * - 通过弹窗view的dealloc自动释放，避免内存泄漏
+ * - 提供弹窗控制接口，支持显示、隐藏、事件发送等操作
+ * 
+ * 架构设计：
+ * - 作为单独弹窗的包装器，实现SMPopupViewProtocol协议
+ * - 通过关联对象与UIView绑定，实现自动生命周期管理
+ * - 支持弹窗叠加显示，不受队列优先级限制
+ * 
+ * 使用场景：
+ * - 需要独立管理的弹窗（如引导页、提示框等）
+ * - 需要叠加显示的弹窗（如多个提示同时显示）
+ * - 需要精确控制生命周期的弹窗
+ * 
+ * 生命周期：
+ * - 创建时：初始化解释器和配置
+ * - 显示时：调用解释器的show方法
+ * - 隐藏时：调用解释器的dismiss方法
+ * - 释放时：通过view的dealloc自动清理
  */
 public class SMPopupContainer: NSObject {
     
     /// 弹窗解释器
+    /// - Note: 负责弹窗的实际显示、隐藏和动画控制
+    /// - 封装了所有弹窗操作的具体实现
     private let interpreter: SMPopupInterpreter
     
     /// 弹窗配置
+    /// - Note: 包含弹窗的样式、动画、优先级等配置信息
+    /// - 在容器创建时确定，后续不可修改
     private let config: SMPopupConfig
     
     /// 弹窗视图
+    /// - Note: 实际的弹窗UI视图，使用弱引用避免循环引用
+    /// - 当view被释放时，容器也会自动释放
     private weak var popupView: UIView?
     
     /// 是否已经显示
+    /// - Note: 跟踪弹窗的显示状态，防止重复显示
+    /// - 用于状态管理和控制
     private var isShown: Bool = false
     
     /// 初始化方法
