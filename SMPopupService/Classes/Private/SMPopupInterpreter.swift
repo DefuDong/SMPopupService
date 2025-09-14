@@ -180,13 +180,16 @@ class SMPopupInterpreter: NSObject {
         return config.priority + weight
     }
     
-    private lazy var backView: SMPopupMaskView = SMPopupMaskView { [weak self] in
-        if let _ = self?.popupView?.popupViewProtocol { //如果是单独弹出的弹窗, 直接dismiss
-            self?.dismiss(true)
-        } else {
-            self?.abnormalDismissBlock?()
+    private lazy var backView: SMPopupMaskView = {
+        let view = SMPopupMaskView { [weak self] in
+            if let _ = self?.popupView?.popupViewProtocol { //如果是单独弹出的弹窗, 直接dismiss
+                self?.dismiss(true)
+            } else {
+                self?.abnormalDismissBlock?()
+            }
         }
-    }
+        return view
+    }()
     //存储弹窗原始frame
     private var originalFrame: CGRect = .zero
     
@@ -509,14 +512,12 @@ extension SMPopupInterpreter {
         dismissTime = config.dismissDuration
         stopTimer()
         
-        let t = Timer.scheduledTimer(timeInterval: 1.0,
-                                     target: self,
-                                     selector:#selector(timerLoop),
-                                     userInfo: nil,
-                                     repeats: true)
-        RunLoop.main.add(t, forMode: .common)
-        t.fire()
-        timer = t
+        // 使用 weak self 避免循环引用
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.timerLoop()
+        }
+        RunLoop.main.add(timer!, forMode: .common)
+        timer?.fire()
     }
     
     func stopTimer() {
@@ -526,7 +527,7 @@ extension SMPopupInterpreter {
         }
     }
 
-    @objc private func timerLoop() {
+    private func timerLoop() {
         if dismissTime < 1 {
             stopTimer()
             dismissCalledBlock?()

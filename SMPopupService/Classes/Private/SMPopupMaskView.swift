@@ -48,21 +48,27 @@ class SMPopupMaskView: UIView, UIGestureRecognizerDelegate {
         }
         
         var nextSuper = superview
-        while nextSuper != nil {
+        var depth = 0
+        let maxDepth = 10 // 防止无限循环
+        
+        while nextSuper != nil && depth < maxDepth {
             if isOnStack(view: nextSuper) {
                 return false
             }
             //如果是在导航栈中, 需要遍历navigationController.view
             if let navigationController = (nextSuper?.next as? UIViewController)?.navigationController {
                 var navNext = navigationController.view
-                while navNext != nil {
+                var navDepth = 0
+                while navNext != nil && navDepth < maxDepth {
                     if isOnStack(view: navNext) {
                         return false
                     }
                     navNext = navNext?.superview
+                    navDepth += 1
                 }
             }
             nextSuper = nextSuper?.superview
+            depth += 1
         }
         return true
     }

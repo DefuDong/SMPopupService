@@ -66,6 +66,7 @@ public class SMPopupService: NSObject {
     ///   - delegate: delegate 为历史弹窗迁移提供, 比如VC
     ///   - event: 事件回调, 可以发送自定义事件并且附带参数. 注意如果是自定义事件, 需要检查跟当前弹窗是否匹配
     /// - Returns: SMPopupViewProtocol 协议类型, dismiss和sendEvent需要使用protol操作
+    /// - Note: 弹窗view会持有配置对象，通过view的dealloc自动管理生命周期
     public class func showSingle(config: SMPopupConfig,
                                  view: UIView? = nil,
                                  dataSource: SMPopupViewDataSource? = nil,
@@ -73,16 +74,30 @@ public class SMPopupService: NSObject {
                                  event: SMPopupEventBlock? = nil) -> SMPopupViewProtocol {
         assert((view == nil && dataSource != nil) || (view != nil && dataSource == nil) , "view or customPopupView only need one")
         assert(view != nil || dataSource?.customPopupView?() != nil, "view or customPopupView need be implemented")
-        let interpreter = SMPopupInterpreter(config: config,
-                                             popupView: view,
-                                             dataSource: dataSource,
-                                             delegate: delegate)
-        interpreter.eventBlock = event
-        interpreter.dismissCalledBlock = { [weak interpreter] in
-            interpreter?.dismiss()
+        
+        // 获取实际的弹窗视图
+        let actualView = view ?? dataSource?.customPopupView?()
+        guard let popupView = actualView else {
+            fatalError("view or customPopupView must be provided")
         }
-        let _ = interpreter.show(true)
-        return interpreter
+        
+        // 创建弹窗容器
+        let container = SMPopupContainer(
+            config: config,
+            popupView: popupView,
+            dataSource: dataSource,
+            delegate: delegate,
+            event: event
+        )
+        
+        // 将容器关联到弹窗视图
+        popupView.popupContainer = container
+        popupView.popupViewProtocol = container
+        
+        // 显示弹窗
+        let _ = container.show()
+        
+        return container
     }
     
     
