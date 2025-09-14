@@ -22,7 +22,7 @@ import Foundation
  * - 所有操作都在独立队列中执行，避免主线程阻塞
  * 
  * 优先级规则：
- * - 数值越小优先级越高（小根堆特性）
+ * - 数值越大优先级越高（大根堆特性）
  * - 相同优先级的弹窗按添加顺序执行
  * - 无法获取优先级的弹窗默认优先级最高
  */
@@ -30,7 +30,7 @@ class SMSafePool {
     private let pool: SMPriorityQueue = SMPriorityQueue { obj1, obj2 in
         guard let p1 = (obj1 as? SMPopupInterpreter)?.priority,
               let p2 = (obj2 as? SMPopupInterpreter)?.priority else { return true }
-        return p1 <= p2  // 小优先级在前，符合小根堆特性
+        return p1 >= p2  // 大优先级在前，符合大根堆特性
     }
 
     /// 共享的并发队列，用于管理弹窗操作的线程安全

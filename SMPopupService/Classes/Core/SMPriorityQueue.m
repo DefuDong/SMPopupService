@@ -4,11 +4,11 @@
 //
 //  Created by 董德富 on 2023/9/4.
 //
-//  优先级队列实现 - 基于二叉堆（小根堆）
+//  优先级队列实现 - 基于二叉堆（可配置大小根堆）
 //
 //  算法说明：
 //  1. 数据结构：使用数组实现的完全二叉树（二叉堆）
-//  2. 堆性质：父节点的值总是小于或等于其子节点的值（小根堆）
+//  2. 堆性质：通过比较函数动态决定大小根堆性质
 //  3. 时间复杂度：
 //     - 插入操作：O(log n) - 上浮调整
 //     - 删除操作：O(log n) - 下沉调整
@@ -57,8 +57,8 @@ typedef struct {
  * 初始化优先级队列
  * 
  * @param cmp 比较函数block，用于定义元素间的优先级关系
- *            cmp(obj1, obj2) 返回 true 表示 obj1 <= obj2（obj1优先级更高或相等）
- *            cmp(obj1, obj2) 返回 false 表示 obj1 > obj2（obj1优先级更低）
+ *            cmp(obj1, obj2) 返回 true 表示 obj1优先级 >= obj2优先级
+ *            cmp(obj1, obj2) 返回 false 表示 obj1优先级 < obj2优先级
  * @return 初始化后的优先级队列实例
  */
 - (instancetype)initWithCompareBlock:(SMQueueCompare)cmp {
@@ -153,11 +153,11 @@ typedef struct {
     self.heap->base[new_node] = val;
     
     // 步骤3：上浮操作（Heapify Up）- 从新元素开始向上调整
-    // 目标：维护小根堆性质（父节点 <= 子节点）
+    // 目标：维护堆性质（根据比较函数决定大小根堆）
     // 
     // 比较函数语义：
-    // comp(parent, child) 返回 true  -> parent <= child，满足堆性质
-    // comp(parent, child) 返回 false -> parent > child，需要交换
+    // comp(parent, child) 返回 true  -> parent优先级 >= child优先级，满足堆性质
+    // comp(parent, child) 返回 false -> parent优先级 < child优先级，需要交换
     while (new_node != 0 &&
            self.comp((__bridge id)self.heap->base[par_node], (__bridge id)self.heap->base[new_node]) == false) {
         
@@ -199,7 +199,7 @@ typedef struct {
         self.heap->size--; // 步骤3：删除最后一个元素（原来的堆顶）
 
         // 步骤4：下沉操作（Heapify Down）- 从新的堆顶开始向下调整
-        // 目标：维护小根堆性质（父节点 <= 子节点）
+        // 目标：维护堆性质（根据比较函数决定大小根堆）
         while (pos < self.heap->size - 1) {
             // 计算左右子节点的位置
             l_pos = pos * 2 + 1;  // 左子节点：2*i+1
@@ -207,8 +207,8 @@ typedef struct {
 
             // 检查当前节点与子节点的堆性质
             // 比较函数语义：
-            // comp(parent, child) 返回 true  -> parent <= child，满足堆性质
-            // comp(parent, child) 返回 false -> parent > child，需要交换
+            // comp(parent, child) 返回 true  -> parent优先级 >= child优先级，满足堆性质
+            // comp(parent, child) 返回 false -> parent优先级 < child优先级，需要交换
             // 当子节点不存在时，条件设为 false，表示不需要交换
             l_cond = (l_pos < self.heap->size) ? 
                      self.comp((__bridge id)self.heap->base[pos], (__bridge id)self.heap->base[l_pos]) : false;
