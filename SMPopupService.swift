@@ -8,18 +8,48 @@
 import Foundation
 import UIKit
 
-
+/**
+ * 弹窗服务主类
+ * 
+ * 功能说明：
+ * - 提供弹窗的创建、显示、隐藏和管理功能
+ * - 支持队列管理和单独弹窗两种模式
+ * - 提供多种弹窗样式和动画效果
+ * - 支持优先级队列，确保重要弹窗优先显示
+ * 
+ * 架构设计：
+ * - 使用单例模式提供标准队列和共存队列
+ * - 通过SMPoolCore管理弹窗队列
+ * - 支持自定义队列实例，满足不同业务需求
+ * - 新架构支持弹窗view自动管理生命周期
+ * 
+ * 使用方式：
+ * - 队列模式：SMPopupService.standard.show() - 按优先级排队显示
+ * - 单独模式：SMPopupService.showSingle() - 直接显示，自动管理生命周期
+ * - 自定义队列：创建SMPopupService实例 - 独立管理弹窗队列
+ * 
+ * 线程安全：
+ * - 所有公共方法都是线程安全的
+ * - 内部使用并发队列管理弹窗操作
+ * - UI操作自动切换到主线程执行
+ */
 @objcMembers
 public class SMPopupService: NSObject {
     
     /// 默认展示队列
+    /// - Note: 单例模式，用于管理大部分弹窗的显示队列
     public static let standard = SMPopupService()
     
     /// 共存展示队列
+    /// - Note: 单例模式，用于需要同时显示多个弹窗的场景
     public static let coexistence = SMPopupService()
+    
+    /// 弹窗核心管理器
+    /// - Note: 负责弹窗队列的管理、优先级排序和生命周期控制
     private let core: SMPoolCore
     
-    /// 需要更多队列请自行创建新的实例
+    /// 初始化弹窗服务
+    /// - Note: 创建新的SMPoolCore实例，用于独立管理弹窗队列
     public override init() {
         core = SMPoolCore()
         super.init()

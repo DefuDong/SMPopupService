@@ -8,25 +8,61 @@
 import Foundation
 import UIKit
 
+/**
+ * 弹窗池核心管理类
+ * 
+ * 功能说明：
+ * - 管理弹窗队列的添加、移除和显示
+ * - 控制弹窗的优先级排序和显示顺序
+ * - 处理弹窗的暂停、恢复和清除操作
+ * - 管理当前显示的弹窗状态
+ * 
+ * 核心机制：
+ * - 使用SMSafePool管理弹窗队列，支持优先级排序
+ * - 使用SMPopupSubcribe处理弹窗事件和状态变化
+ * - 确保同一时间只有一个弹窗显示
+ * - 支持弹窗的自动切换和手动控制
+ * 
+ * 状态管理：
+ * - isShowing: 综合判断是否有弹窗正在显示
+ * - isShown: 内部状态标记
+ * - currentInterperter: 当前显示的弹窗解释器
+ * 
+ * 线程安全：
+ * - 内部使用SMSafePool的线程安全机制
+ * - 所有操作都在独立队列中执行
+ * - UI操作自动切换到主线程
+ */
 class SMPoolCore {
-    /// paush时isShown可能为true, 所以需要综合判断
+    /// 是否有弹窗正在显示
+    /// - Note: 综合判断isShown和currentInterperter，确保状态准确性
+    /// - Returns: true表示有弹窗正在显示，false表示没有
     var isShowing: Bool {
         isShown && (currentInterperter != nil)
     }
-    /// 是否有弹窗正在展示
+    
+    /// 内部显示状态标记
+    /// - Note: 用于跟踪弹窗的显示状态，pause时可能为true
     private var isShown: Bool = false
     
+    /// 安全弹窗池
+    /// - Note: 使用优先级队列管理弹窗，支持线程安全操作
     private let safePool: SMSafePool = SMSafePool()
     
+    /// 弹窗订阅管理器
+    /// - Note: 处理弹窗事件订阅和状态变化通知
     private let subcribe: SMPopupSubcribe = SMPopupSubcribe()
 
-    ///  当前弹窗
+    /// 当前显示的弹窗解释器
+    /// - Note: 记录当前正在显示的弹窗，用于状态管理和控制
     private var currentInterperter: SMPopupInterpreter?
     
     
-    /// 放入队列并开始展示
-    /// - Parameter inter: 弹窗
+    /// 将弹窗放入队列并开始展示
+    /// - Parameter inter: 弹窗解释器对象
+    /// - Note: 此方法会检查无用弹窗，将新弹窗加入队列，并尝试显示
     func run(_ inter: SMPopupInterpreter) {
+        // 检查并清理无用的弹窗
         checkUselessPopup()
         
         inter.dismissCalledBlock = { [weak self] in

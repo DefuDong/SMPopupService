@@ -8,23 +8,68 @@
 import Foundation
 import UIKit
 
+/**
+ * 弹窗解释器类
+ * 
+ * 功能说明：
+ * - 负责弹窗的显示、隐藏、动画和生命周期管理
+ * - 处理弹窗的布局、样式和交互逻辑
+ * - 支持自定义动画、DataSource和Delegate
+ * - 管理弹窗的定时器、手势和事件回调
+ * 
+ * 架构设计：
+ * - 作为弹窗的核心控制器，封装了所有弹窗操作
+ * - 通过DataSource模式支持动态创建弹窗视图
+ * - 通过Delegate模式提供生命周期回调
+ * - 支持事件系统，可以发送和接收自定义事件
+ * 
+ * 使用场景：
+ * - 队列管理的弹窗：通过SMPoolCore调用
+ * - 单独弹窗：通过SMPopupContainer包装使用
+ * - 自定义弹窗：实现DataSource和Delegate协议
+ * 
+ * 线程安全：
+ * - 所有UI操作都在主线程执行
+ * - 定时器和动画操作自动切换到主线程
+ * - 事件回调在主线程执行
+ */
 class SMPopupInterpreter: NSObject {
     
+    /// 弹窗配置对象
+    /// - Note: 包含弹窗的所有配置信息，如样式、动画、优先级等
     let config: SMPopupConfig
     
+    /// 弹窗视图
+    /// - Note: 实际的弹窗UI视图，可能由view参数或dataSource创建
     var popupView: UIView?
     
+    /// 事件回调块
+    /// - Note: 用于发送自定义事件，支持弹窗与外部通信
     var eventBlock: SMPopupEventBlock?
     
     /// 消失回调(定时器/手势/背景点击)
+    /// - Note: 当弹窗因定时器、手势或背景点击而消失时调用
     var dismissCalledBlock: (() -> Void)?
     
-    /// 弹窗异常消失回调, 不在当前视图层及展示,比如控制器右滑, 没有调用正常消失代码
+    /// 弹窗异常消失回调
+    /// - Note: 当弹窗不在当前视图层及展示时调用，比如控制器右滑等异常情况
     var abnormalDismissBlock: (() -> Void)?
 
+    /// 数据源协议对象
+    /// - Note: 用于动态创建弹窗视图和自定义布局
     private var dataSource: SMPopupViewDataSource?
+    
+    /// 代理协议对象
+    /// - Note: 用于接收弹窗生命周期回调
     private var delegate: SMPopupViewDelegate?
 
+    /// 初始化弹窗解释器
+    /// - Parameters:
+    ///   - config: 弹窗配置对象，包含样式、动画、优先级等配置
+    ///   - popupView: 弹窗视图，如果提供则直接使用
+    ///   - dataSource: 数据源协议，用于动态创建弹窗视图
+    ///   - delegate: 代理协议，用于接收生命周期回调
+    /// - Note: popupView和dataSource二选一，不能同时为nil
     init(config: SMPopupConfig, popupView: UIView? = nil, dataSource: SMPopupViewDataSource? = nil, delegate: SMPopupViewDelegate? = nil) {
         self.config = config
         self.popupView = popupView
@@ -32,16 +77,26 @@ class SMPopupInterpreter: NSObject {
         self.delegate = delegate
     }
     
+    /// 显示弹窗
+    /// - Parameter isSingle: 是否为单独弹窗，单独弹窗会设置popupViewProtocol
+    /// - Returns: 是否显示成功
+    /// - Note: 此方法会执行完整的弹窗显示流程，包括视图创建、布局、动画等
     func show(_ isSingle: Bool = false) -> Bool {
+        // 获取弹窗视图（从参数或dataSource创建）
         popupView = getPopupView()
+        
+        // 如果是单独弹窗，设置协议对象用于外部控制
         if isSingle {
             popupView?.popupViewProtocol = self
         }
         
+        // 验证弹窗视图是否存在
         guard let popupView = popupView else { return false }
+        
+        // 获取容器视图（配置的容器或主窗口）
         guard let container = config.containerView ?? UIApplication.shared.getKeyWindow() else { return false }
         
-        //lify cycle
+        // 生命周期回调：弹窗即将出现
         realDelegate()?.popupWillAppear?()
         sendEvent(SMPopupEvent.lifeCycleEvent(scene: SMPopupEvent.SMPopupViewWillAppear))
         
